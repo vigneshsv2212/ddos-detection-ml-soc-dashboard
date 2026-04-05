@@ -18,29 +18,34 @@ uploaded_file = st.file_uploader("Upload Network Flow Dataset (CSV)", type=["csv
 
 if uploaded_file is not None:
 
+    # =====================
+    # LOAD DATA
+    # =====================
     df = pd.read_csv(uploaded_file)
     df.columns = df.columns.str.strip()
 
-    st.success("Dataset uploaded successfully")
+    # =====================
+    # DATA PREVIEW
+    # =====================
+    st.subheader("📊 Dataset Preview")
+    st.dataframe(df.head())
 
     # =====================
-    # DATA OVERVIEW
+    # SOC METRICS
     # =====================
-    st.header("📊 Data Overview")
+    st.subheader("📈 Traffic Overview")
 
     col1, col2, col3 = st.columns(3)
-    col1.metric("Rows", df.shape[0])
-    col2.metric("Columns", df.shape[1])
-    col3.metric("Attack Types", df["Attack_Type"].nunique())
-
-    st.subheader("Sample Data")
-    st.dataframe(df.head())
+    col1.metric("Total Records", len(df))
+    col2.metric("Unique Attack Types", df["Attack_Type"].nunique())
+    col3.metric("Features", df.shape[1])
 
     # =====================
     # ATTACK DISTRIBUTION
     # =====================
-    st.subheader("🚨 Attack Type Distribution")
-    st.bar_chart(df["Attack_Type"].value_counts())
+    st.subheader("🚨 Attack Distribution")
+    attack_counts = df["Attack_Type"].value_counts()
+    st.bar_chart(attack_counts)
 
     # =====================
     # PREPROCESSING
@@ -72,6 +77,9 @@ if uploaded_file is not None:
 
     X.fillna(0, inplace=True)
 
+    # =====================
+    # ENCODING + SPLIT
+    # =====================
     le = LabelEncoder()
     y_encoded = le.fit_transform(y)
 
@@ -125,7 +133,6 @@ if uploaded_file is not None:
         col1.metric("Random Forest Accuracy", round(rf_acc, 3))
         col2.metric("XGBoost Accuracy", round(xgb_acc, 3))
 
-        # Best model highlight
         if xgb_acc > rf_acc:
             st.success("🏆 XGBoost is performing better")
         else:
@@ -134,26 +141,25 @@ if uploaded_file is not None:
         # =====================
         # CONFUSION MATRIX
         # =====================
-        st.subheader("🔍 Confusion Matrix (Random Forest)")
+        st.subheader("🔍 Confusion Matrix (RF)")
 
         cm = confusion_matrix(y_test, rf_pred)
 
         fig, ax = plt.subplots()
         ax.imshow(cm)
-
         ax.set_xlabel("Predicted")
         ax.set_ylabel("Actual")
-
         st.pyplot(fig)
 
         # =====================
         # CLASSIFICATION REPORT
         # =====================
-        st.subheader("📋 Detailed Classification Report")
+        st.subheader("📋 Classification Report")
 
         report = classification_report(y_test, rf_pred, output_dict=True)
+        report_df = pd.DataFrame(report).transpose()
 
-        st.dataframe(pd.DataFrame(report).transpose())
+        st.dataframe(report_df)
 
         # =====================
         # WEAKEST CLASS
@@ -163,4 +169,36 @@ if uploaded_file is not None:
             key=lambda x: report[x]["recall"]
         )
 
-        st.warning(f"⚠️ Weakest detected attack class: {le.inverse_transform([int(worst_class)])[0]}")
+        st.warning(
+            f"⚠️ Weakest detected attack class: {le.inverse_transform([int(worst_class)])[0]}"
+        )
+
+        # =====================
+        # ALERT TABLE (SOC STYLE)
+        # =====================
+        st.subheader("🚨 Detected Alerts")
+
+        results_df = pd.DataFrame({
+            "Actual": le.inverse_transform(y_test),
+            "Predicted": le.inverse_transform(xgb_pred)
+        })
+
+        # Confidence score
+        probs = xgb.predict_proba(X_test)
+        results_df["Confidence"] = np.max(probs, axis=1)
+
+        alerts = results_df[results_df["Actual"] != results_df["Predicted"]]
+
+        st.dataframe(alerts.sort_values("Confidence", ascending=False).head(50))
+
+        # =====================
+        # DOWNLOAD ALERTS
+        # =====================
+        csv = alerts.to_csv(index=False).encode('utf-8')
+
+        st.download_button(
+            "⬇ Download Alerts",
+            csv,
+            "alerts.csv",
+            "text/csv"
+        )
