@@ -13,6 +13,9 @@ The system is built using the **CIC-DDoS2019 dataset (~30GB)** and integrates ma
 
 ---
 
+## 🚀 Live Demo
+🔗 https://ddos-detection-ml-soc-dashboard-eejvrhuhhbtm7pwws8tyn9.streamlit.app/
+
 ## 🎯 Objectives
 
 * Detect multiple DDoS attack types using flow-based network features
