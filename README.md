@@ -7,6 +7,11 @@ This project presents a Machine Learning-based system for detecting Distributed 
 The system is built using the **CIC-DDoS2019 dataset (~30GB)** and integrates machine learning models into a **SOC-style (Security Operations Center) dashboard** using Streamlit.
 
 ---
+## 🖥️ Dashboard Preview
+
+![Dashboard](dashboard.png)
+
+---
 
 ## 🎯 Objectives
 
