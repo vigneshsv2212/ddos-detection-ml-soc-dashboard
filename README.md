@@ -70,6 +70,28 @@ The system is built using the **CIC-DDoS2019 dataset (~30GB)** and integrates ma
 | Random Forest | **86.8%** |
 | XGBoost       | **87.8%** |
 
+## 📊 Model Visualizations
+
+### 🔍 Confusion Matrix (Random Forest)
+![Confusion Matrix](confusion_matrix.png)
+
+👉 Most attacks like MSSQL, NTP, and SSDP are correctly classified (strong diagonal values), while LDAP shows weaker detection, confirming lower recall.
+
+---
+
+### 📉 Attack Distribution (Class Imbalance)
+![Attack Distribution](attack_distribution.png)
+
+👉 The dataset is highly imbalanced, with some attack types dominating. This directly impacts model performance on minority classes.
+
+---
+
+### ⚖️ Model Accuracy Comparison
+![Model Comparison](model_comparison.png)
+
+👉 XGBoost slightly outperforms Random Forest overall, but both models struggle with minority attack classes like LDAP.
+
+
 ### 🔍 Detailed Performance Insights
 
 * **MSSQL, NTP, SSDP** → Very high detection (≈ 0.98–0.99 precision & recall)
